@@ -113,6 +113,7 @@ sudo vi /etc/containerd/config.toml
 #Finally, to apply these changes, we need to restart containerd.
 
 sudo systemctl restart containerd
+sudo systemctl status containerd
 
 #To check that containerd is indeed running, use this command:
 
