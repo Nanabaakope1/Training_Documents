@@ -78,10 +78,6 @@ sudo apt install curl -y
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
-
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-
-
 #Update and then install the containerd package.
 
 sudo apt update -y 
@@ -119,6 +115,7 @@ sudo vi /etc/containerd/config.toml
 sudo systemctl restart containerd
 sudo systemctl status containerd
 
+
 #To check that containerd is indeed running, use this command:
 
 ps -ef | grep containerd
@@ -133,17 +130,22 @@ ps -ef | grep containerd
 #Step 2. Install Kubernetes
 #With our container runtime installed and configured, we are ready to install Kubernetes.
 
-#Add the repository key and the repository.
+#Add the repository key and the repository
+sudo apt-get update
+#apt-transport-https may be dummy package, if so, you can skip that package
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
 
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+#if the dir /etc/apt/keyrings does not exist, it should be created before the curl command, read the note below
+#sudo mkdir -p -m 755 /etc/apt/keyrings
+#mkdir /etc/apt/keyrings
 
-#Update your system and install the 3 Kubernetes modules.
-
-sudo apt update -y
-sudo apt install -y kubelet kubeadm kubectl
-
-#Set up the firewall by installing the following rules on the master/both the nodes:
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+# This overwrites any existing config in /etc/apt/sources.list.d/kubernetes.list
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo systemctl enable kubelet
+keyewall by installing the following rules on the master/both the nodes:
 sudo ufw allow 6443/tcp
 sudo ufw allow 2379/tcp
 sudo ufw allow 2380/tcp
